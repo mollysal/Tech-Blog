@@ -1,5 +1,4 @@
 const router = require('express').Router();
-const { post } = require('.');
 const { Post, User, Comment } = require('../models');
 //const withAuth = require('../utils/auth');
 
@@ -71,7 +70,7 @@ router.get('/post/:id', async (req, res) => {
             res.status(400).json({ message: 'No Post found with this id' });
             return;
         }
-        
+
         // Serialize data so the template can read it
         const post = postData.get({ plain: true });
 
