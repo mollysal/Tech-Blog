@@ -1,19 +1,67 @@
 const router = require('express').Router();
-const { Post, User, Comment } = require('../models');
+const { Post, User, Comment } = require('../../models');
 const withAuth = require('../utils/auth');
 
-// Get /api/users
+// Copied from Miniproject 
 
-// Get /api/users/#
+// Post 
+router.post('/', async (req, res) => {
+    try {
+        const userData = await User.create(req.body);
 
-// Post /api/users
+        req.session.save(() => {
+            req.session.user_id = userData.id;
+            req.session.logged_in = true;
+
+            res.status(200).json(userData);
+        });
+    } catch (err) {
+        res.status(400).json(err);
+    }
+});
 
 // Post /api/login
+router.post('/login', async (req, res) => {
+    try {
+        const userData = await User.findOne({ where: { email: req.body.email } });
 
-// Post /api/logout
+        if (!userData) {
+            res
+                .status(400)
+                .json({ message: 'Incorrect email or password, please try again' });
+            return;
+        }
 
-// Put /api/users/# (Updating Post)
+        const validPassword = await userData.checkPassword(req.body.password);
 
-// Delete /api/users/# (Deleting Post)
+        if (!validPassword) {
+            res
+                .status(400)
+                .json({ message: 'Incorrect email or password, please try again' });
+            return;
+        }
+
+        req.session.save(() => {
+            req.session.user_id = userData.id;
+            req.session.logged_in = true;
+
+            res.json({ user: userData, message: 'You are now logged in!' });
+        });
+
+    } catch (err) {
+        res.status(400).json(err);
+    }
+});
+
+// Post /api/logout 
+router.post('/logout', (req, res) => {
+    if (req.session.logged_in) {
+        req.session.destroy(() => {
+            res.status(204).end();
+        });
+    } else {
+        res.status(404).end();
+    }
+});
 
 module.exports = router; 
